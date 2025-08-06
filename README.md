@@ -68,7 +68,7 @@ I don't have a ton of the devices but it would seem that any device that utilize
   * KS125
   * KS135
 
-If you're interested in testing other devices I suggest using the underlying library [pykasacloud](https://github.com/iluvdata/PyKasaCloud) to first connect to the device and enabling debug logging.  If you need assistance submit and Issue.
+If you're interested in testing other devices I suggest using the underlying library [pykasacloud](https://github.com/iluvdata/PyKasaCloud) to first connect to the device and enabling debug logging.  If you need assistance submit an Issue on github.
 
 ## Future Directions
 
