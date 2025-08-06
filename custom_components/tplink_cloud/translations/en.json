@@ -1,0 +1,436 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Account is already configured"
+    },
+    "error": {
+      "auth_error": "Cloud authentication error",
+      "unknown": "Unexpected error"
+    },
+    "step": {
+      "user": {
+        "description": "Enter credentials used to access Kasa Smarthome App.",
+        "data": {
+          "host": "Host",
+          "password": "Password",
+          "username": "Username"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling Intervals",
+        "data": {
+          "device_interval": "Device Update Interval",
+          "device_list_interval": "Poll For New Devices Interval"
+        },
+        "data_description": {
+          "device_interval": "Minimun { device_interval }s. Recommend { default_interval }s to avoid API restrictions",
+          "device_list_interval": "Minimun { device_list_interval }m. Recommend { default_list_interval }m to avoid API restrictions"
+        }
+      }
+    },
+    "error": {
+      "min_interval": "One of the durations is less than the minimun duration."
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "cloud_connection": {
+        "name": "Cloud connection"
+      },
+      "humidity_warning": {
+        "name": "Humidity warning"
+      },
+      "overheated": {
+        "name": "Overheated"
+      },
+      "overloaded": {
+        "name": "Overloaded"
+      },
+      "temperature_warning": {
+        "name": "Temperature warning"
+      },
+      "water_alert": {
+        "name": "Moisture",
+        "state": {
+          "off": "Dry",
+          "on": "Wet"
+        }
+      }
+    },
+    "button": {
+      "charging_contacts_reset": {
+        "name": "Reset charging contacts consumable"
+      },
+      "filter_reset": {
+        "name": "Reset filter consumable"
+      },
+      "main_brush_reset": {
+        "name": "Reset main brush consumable"
+      },
+      "pair": {
+        "name": "Pair new device"
+      },
+      "pan_left": {
+        "name": "Pan left"
+      },
+      "pan_right": {
+        "name": "Pan right"
+      },
+      "sensor_reset": {
+        "name": "Reset sensor consumable"
+      },
+      "side_brush_reset": {
+        "name": "Reset side brush consumable"
+      },
+      "stop_alarm": {
+        "name": "Stop alarm"
+      },
+      "test_alarm": {
+        "name": "Test alarm"
+      },
+      "tilt_down": {
+        "name": "Tilt down"
+      },
+      "tilt_up": {
+        "name": "Tilt up"
+      },
+      "unpair": {
+        "name": "Unpair device"
+      }
+    },
+    "camera": {
+      "live_view": {
+        "name": "Live view"
+      }
+    },
+    "number": {
+      "auto_off_minutes": {
+        "name": "Turn off in"
+      },
+      "clean_count": {
+        "name": "Clean count"
+      },
+      "pan_step": {
+        "name": "Pan degrees"
+      },
+      "power_protection_threshold": {
+        "name": "Power protection"
+      },
+      "smooth_transition_off": {
+        "name": "Smooth off"
+      },
+      "smooth_transition_on": {
+        "name": "Smooth on"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "tilt_step": {
+        "name": "Tilt degrees"
+      }
+    },
+    "select": {
+      "alarm_sound": {
+        "name": "Alarm sound"
+      },
+      "alarm_volume": {
+        "name": "Alarm volume"
+      },
+      "light_preset": {
+        "name": "Light preset"
+      }
+    },
+    "sensor": {
+      "alarm_source": {
+        "name": "Alarm source"
+      },
+      "auto_off_at": {
+        "name": "Auto-off at"
+      },
+      "charging_contacts_remaining": {
+        "name": "Charging contacts remaining"
+      },
+      "charging_contacts_used": {
+        "name": "Charging contacts used"
+      },
+      "clean_area": {
+        "name": "Cleaning area"
+      },
+      "clean_progress": {
+        "name": "Cleaning progress"
+      },
+      "clean_time": {
+        "name": "Cleaning time"
+      },
+      "consumption_this_month": {
+        "name": "This month's consumption"
+      },
+      "consumption_today": {
+        "name": "Today's consumption"
+      },
+      "consumption_total": {
+        "name": "Total consumption"
+      },
+      "current_consumption": {
+        "name": "Current consumption"
+      },
+      "device_time": {
+        "name": "Device time"
+      },
+      "filter_remaining": {
+        "name": "Filter remaining"
+      },
+      "filter_used": {
+        "name": "Filter used"
+      },
+      "last_clean_area": {
+        "name": "Last cleaned area"
+      },
+      "last_clean_time": {
+        "name": "Last cleaned time"
+      },
+      "last_clean_timestamp": {
+        "name": "Last clean start"
+      },
+      "main_brush_remaining": {
+        "name": "Main brush remaining"
+      },
+      "main_brush_used": {
+        "name": "Main brush used"
+      },
+      "on_since": {
+        "name": "On since"
+      },
+      "report_interval": {
+        "name": "Report interval"
+      },
+      "sensor_remaining": {
+        "name": "Sensor remaining"
+      },
+      "sensor_used": {
+        "name": "Sensor used"
+      },
+      "side_brush_remaining": {
+        "name": "Side brush remaining"
+      },
+      "side_brush_used": {
+        "name": "Side brush used"
+      },
+      "signal_level": {
+        "name": "Signal level"
+      },
+      "ssid": {
+        "name": "SSID"
+      },
+      "total_clean_area": {
+        "name": "Total cleaning area"
+      },
+      "total_clean_count": {
+        "name": "Total cleaning count"
+      },
+      "total_clean_time": {
+        "name": "Total cleaning time"
+      },
+      "vacuum_error": {
+        "name": "Error",
+        "state": {
+          "batterylow": "Low on battery",
+          "dustbinremoved": "Missing dust bin",
+          "lidarblocked": "Lidar blocked",
+          "mainbrushstuck": "Main brush stuck",
+          "ok": "No error",
+          "sidebrushstuck": "Side brush stuck",
+          "trapped": "Unable to move",
+          "trappedcliff": "Unable to move (cliff sensor)",
+          "unabletofinddock": "Unable to find dock",
+          "unabletomove": "Unable to move",
+          "unknowninternal": "Unknown error, report to upstream",
+          "wheelblocked": "Wheel blocked"
+        }
+      },
+      "water_alert_timestamp": {
+        "name": "Last water leak alert"
+      }
+    },
+    "switch": {
+      "auto_off_enabled": {
+        "name": "Auto-off enabled"
+      },
+      "auto_update_enabled": {
+        "name": "Auto-update enabled"
+      },
+      "baby_cry_detection": {
+        "name": "Baby cry detection"
+      },
+      "carpet_boost": {
+        "name": "Carpet boost"
+      },
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "fan_sleep_mode": {
+        "name": "Fan sleep mode"
+      },
+      "led": {
+        "name": "LED"
+      },
+      "motion_detection": {
+        "name": "Motion detection"
+      },
+      "person_detection": {
+        "name": "Person detection"
+      },
+      "pir_enabled": {
+        "name": "Motion sensor"
+      },
+      "smooth_transitions": {
+        "name": "Smooth transitions"
+      },
+      "tamper_detection": {
+        "name": "Tamper detection"
+      }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "max": "Max",
+              "quiet": "Quiet",
+              "standard": "Standard",
+              "turbo": "Turbo",
+              "ultra": "Ultra"
+            }
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Unable to communicate TPLink/Kasa API. See logs."
+    },
+    "device_authentication": {
+      "message": "Device authentication error {func}: {exc}"
+    },
+    "device_error": {
+      "message": "Unable to communicate with the device {func}: {exc}"
+    },
+    "device_timeout": {
+      "message": "Timeout communicating with the device {func}: {exc}"
+    },
+    "invalid_alarm_duration": {
+      "message": "Invalid duration {duration} available: 1-{duration_max}s"
+    },
+    "set_custom_effect": {
+      "message": "Error trying to set custom effect {effect}: {exc}"
+    },
+    "unexpected_device": {
+      "message": "Unexpected device found at {host}; expected {expected}, found {found}"
+    }
+  },
+  "issues": {
+    "deprecated_entity": {
+      "description": "We detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new `{new_platform}` entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated `{entity}` entity removed, disable the entity and restart Home Assistant.",
+      "title": "Detected deprecated {platform} entity usage"
+    }
+  },
+  "services": {
+    "random_effect": {
+      "description": "Sets a random effect.",
+      "fields": {
+        "backgrounds": {
+          "description": "List of HSV sequences (Max 16).",
+          "name": "Backgrounds"
+        },
+        "brightness": {
+          "description": "Initial brightness.",
+          "name": "Brightness"
+        },
+        "brightness_range": {
+          "description": "Range of brightness.",
+          "name": "Brightness range"
+        },
+        "duration": {
+          "description": "Duration.",
+          "name": "Duration"
+        },
+        "fadeoff": {
+          "description": "Fade off.",
+          "name": "Fade off"
+        },
+        "hue_range": {
+          "description": "Range of hue.",
+          "name": "Hue range"
+        },
+        "init_states": {
+          "description": "Initial HSV sequence.",
+          "name": "Initial states"
+        },
+        "random_seed": {
+          "description": "Random seed.",
+          "name": "Random seed"
+        },
+        "saturation_range": {
+          "description": "Range of saturation.",
+          "name": "Saturation range"
+        },
+        "segments": {
+          "description": "List of segments (0 for all).",
+          "name": "Segments"
+        },
+        "transition": {
+          "description": "Transition.",
+          "name": "Transition"
+        },
+        "transition_range": {
+          "description": "Range of transition.",
+          "name": "Transition range"
+        }
+      },
+      "name": "Random effect"
+    },
+    "sequence_effect": {
+      "description": "Sets a sequence effect.",
+      "fields": {
+        "brightness": {
+          "description": "Initial brightness.",
+          "name": "Brightness"
+        },
+        "direction": {
+          "description": "Direction.",
+          "name": "Direction"
+        },
+        "duration": {
+          "description": "Duration.",
+          "name": "Duration"
+        },
+        "repeat_times": {
+          "description": "Repetitions (0 for continuous).",
+          "name": "Repetitions"
+        },
+        "segments": {
+          "description": "List of segments (0 for all).",
+          "name": "Segments"
+        },
+        "sequence": {
+          "description": "List of HSV sequences (Max 16).",
+          "name": "Sequence"
+        },
+        "spread": {
+          "description": "Speed of spread.",
+          "name": "Spread"
+        },
+        "transition": {
+          "description": "Transition.",
+          "name": "Transition"
+        }
+      },
+      "name": "Sequence effect"
+    }
+  }
+}

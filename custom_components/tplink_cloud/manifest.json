@@ -1,0 +1,17 @@
+{
+  "domain": "tplink_cloud",
+  "name": "TPLink Cloud",
+  "codeowners": ["@iluvdata"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/iluvdata/tplink_cloud",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pykasacloud==2025.7.10"],
+  "ssdp": [],
+  "zeroconf": [],
+  "version": "2025.7.1",
+  "integration_type": "hub",
+  "issue_tracker": "https://github.com/iluvdata/tplink_cloud/issues"
+}
