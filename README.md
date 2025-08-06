@@ -45,7 +45,7 @@ Copy the `tplink_cloud` directory to the `custom_components` directory of your H
 
 Add the intergration to Home Assistant:
 
-[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=pdf_scrape)
+[![Open your Home Assistant instance and start setting up a new integration.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=tplink_cloud)
 
 Enter you username and password you used to setup your device and connect to the TP-Link Cloud.  Unlike most intergrations- this integration will not store your password as the TP-Link Cloud uses access tokens.
 
