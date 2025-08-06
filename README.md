@@ -3,6 +3,8 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square&logo=homeassistantcommunitystore)](https://hacs.xyz/)
 ![GitHub Release](https://img.shields.io/github/v/release/iluvdata/tplink_cloud)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fraw.githubusercontent.com%2Filuvdata%2Ftplink_cloud%2Frefs%2Fheads%2Fmain%2Fcustom_components%2Ftplink_cloud%2Fmanifest.json&query=%24.version&label=dev-version)
+
 
 
 A custom HomeAssistant integration that allows you to integrate a few TPLink/Kasa/Tapo devices by the cloud interface.  This integration relies extensively on the base [TP-Link Smart Home](https://www.home-assistant.io/integrations/tplink/) integration as well as the underlying [python-kasa](https://github.com/python-kasa/python-kasa) library.
