@@ -2,6 +2,7 @@
 
 from homeassistant.const import Platform
 
+ACCOUNT_ID = "account_id"
 DOMAIN = "tplink_cloud"
 TOKEN = "token"
 DEVICE_LIST_INTERVAL = "device_list_interval"
