@@ -11,7 +11,7 @@
   "requirements": ["pykasacloud==2025.9.1"],
   "ssdp": [],
   "zeroconf": [],
-  "version": "2025.7.1",
+  "version": "2025.9.1",
   "integration_type": "hub",
   "issue_tracker": "https://github.com/iluvdata/tplink_cloud/issues"
 }
