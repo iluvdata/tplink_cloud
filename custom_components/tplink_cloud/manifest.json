@@ -8,7 +8,7 @@
   "homekit": {},
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["pykasacloud==2025.7.12"],
+  "requirements": ["pykasacloud==2025.9.1"],
   "ssdp": [],
   "zeroconf": [],
   "version": "2025.7.1",
