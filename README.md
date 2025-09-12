@@ -61,6 +61,10 @@ There are two options to configure.  The defaults should be sufficient for most 
 1. Device List Poll Interval.  The frequency at which the integration looks for new devices.  Default is 30 mins.  Setting this too low will get you temporarily blocked on the api.
 2. Device Poll Interval.  The frequency at which device states are refreshed.  1 min is the default.  30 seconds has worked as well.  It's not clear if more frequent will result in a temporary block.
 
+### New Devices
+
+When the integration polls the cloud (see Device List Poll Interval above) and a new device is discovered.  A notification to reload the integration should be created.  Devices can be manually added by reloading the intergration.
+
 ## Compatible Devices
 
 I don't have a ton of the devices but it would seem that any device that utilizes the IoT Protocol will work as the cloud just passes through requests to and from the device.  Tested with:
