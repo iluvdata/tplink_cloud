@@ -1,5 +1,7 @@
 {
   "config": {
+    "flow_title": "{name} {model}",
+    "entry_type": "Kasa/Tapo Account",
     "step": {
       "user": {
         "data": {
@@ -14,6 +16,9 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to set up {name} {model}?"
       }
     },
     "error": {
@@ -23,7 +28,8 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "entity": {

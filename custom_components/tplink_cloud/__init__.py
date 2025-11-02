@@ -8,7 +8,7 @@ import logging
 from kasa import AuthenticationError
 from pykasacloud import KasaCloud, Token
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.tplink import create_async_tplink_clientsession
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -33,7 +33,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: KasaCloudConfigEntry) ->
 
     try:
         cloud: KasaCloud = await KasaCloud.kasacloud(
-            token=entry.data.get(TOKEN), token_update_callback=update_token
+            client_session=create_async_tplink_clientsession(hass),
+            token=entry.data.get(TOKEN),
+            token_update_callback=update_token,
         )
     except AuthenticationError as err:
         raise ConfigEntryAuthFailed(err) from err
@@ -59,9 +61,13 @@ async def update_listener(hass: HomeAssistant, entry: KasaCloudConfigEntry) -> N
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: KasaCloudConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Delete device if selected from UI."""
+    mac: str = list(device_entry.identifiers)[0][1]
+    devices: list[str] = config_entry.data.get("devices", [])
+    devices.remove(mac.upper())
+    hass.config_entries.async_update_entry(config_entry, data={"devices": devices})
     return True
 
 

@@ -63,13 +63,14 @@ There are two options to configure.  The defaults should be sufficient for most 
 
 ### New Devices
 
-When the integration polls the cloud (see Device List Poll Interval above) and a new device is discovered.  A notification to reload the integration should be created.  Devices can be manually added by reloading the intergration.
+When the integration polls the cloud (see Device List Poll Interval above) and a new device is discovered and can be added through a discovery flow.
 
 ## Compatible Devices
 
-I don't have a ton of the devices but it would seem that any device that utilizes the IoT Protocol will work as the cloud just passes through requests to and from the device.  Tested with:
+I don't have a ton of the devices but it would seem that any device that utilizes the IoT Protocol (not the Smart protocol used by Tapo devices and newer Kasa devices) will work as the cloud just passes through requests to and from the device.  Tested with:
 * Plugs
   * HS100 hw ver 1 and 2
+  * KL115
 * Switches
   * HS200
 * Bulbs

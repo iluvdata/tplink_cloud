@@ -6,19 +6,24 @@ import logging
 from typing import Any, cast
 
 from kasa import AuthenticationError, Device, KasaException
-from pykasacloud import KasaCloud
+from pykasacloud import DeviceDict, KasaCloud
 
 from homeassistant.components.tplink import (
+    DOMAIN as TPLINK_DOMAIN,
     TPLinkConfigEntry,
     TPLinkData,
     TPLinkDataUpdateCoordinator,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
+from homeassistant.const import CONF_ALIAS, CONF_DEVICE, CONF_MAC
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import discovery_flow
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    CONFIG_ENTRY,
     DEFAULT_DEVICE_INTERVAL,
     DEFAULT_DEVICE_LIST_INTERVAL,
     DEVICE_INTERVAL,
@@ -31,6 +36,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 type KasaCloudConfigEntry = ConfigEntry[KasaCloudCoordinator]
+
+
+def device_is_registered(hass: HomeAssistant, formatted_mac: str) -> bool:
+    """Check if the device is already registered."""
+    # first check the device registries:
+    dev_reg: dr.DeviceRegistry = dr.async_get(hass)
+    device = dev_reg.async_get_device({(TPLINK_DOMAIN, formatted_mac.upper())})
+    return device is not None
 
 
 class TPLinkConfigEntrySkelaton:
@@ -47,7 +60,7 @@ class TPLinkConfigEntrySkelaton:
         """Placeholder method that does nothing."""
 
 
-class KasaCloudCoordinator(DataUpdateCoordinator[dict[str, TPLinkData]]):
+class KasaCloudCoordinator(DataUpdateCoordinator[list[TPLinkData]]):
     """KasaCloud Coordinator for refreshing device list."""
 
     config_entry: KasaCloudConfigEntry
@@ -67,63 +80,90 @@ class KasaCloudCoordinator(DataUpdateCoordinator[dict[str, TPLinkData]]):
             name=f"Kasa Cloud {entry.unique_id}",
             update_interval=timedelta(**self._poll_interval),
         )
-        self.data = {}
+        self.data = []
 
     def new_interval(self, value: timedelta) -> None:
         """Set interval between updates."""
-        super().update_interval = value
+        self.update_interval = value
         # update the sub coordinators
         poll_interval: timedelta = timedelta(
             **self.config_entry.options[DEVICE_INTERVAL]
         )
-        for tplinkdata in self.data.values():
+        for tplinkdata in self.data:
             tplinkdata.parent_coordinator.update_interval = poll_interval
 
-    async def _async_update_data(self) -> dict[str, TPLinkData]:
-        try:
-            data: dict[str, Any] = await self.cloud.get_device_list()
-        except AuthenticationError as ex:
-            raise ConfigEntryAuthFailed(ex) from ex
-        except KasaException as ex:
-            raise CloudConnectionError(
-                translation_domain=DOMAIN, translation_key="connection_error"
-            ) from ex
-
+    async def _async_setup(self) -> None:
+        data: list[DeviceDict] = await self._async_get_device_list()
         poll_interval: timedelta = timedelta(
             **self.config_entry.data.get(
                 DEVICE_INTERVAL, {"seconds": DEFAULT_DEVICE_INTERVAL}
             )
         )
+        for device in data:
+            formatted_mac: str = dr.format_mac(device["deviceMac"]).upper()
+            if not device_is_registered(self.hass, formatted_mac):
+                if formatted_mac in self.config_entry.data.get("devices", []):
+                    kasadevice: Device = await self.cloud.get_device(device)
+                    coordinator: TPLinkDataUpdateCoordinator = (
+                        TPLinkDataUpdateCoordinator(
+                            hass=self.hass,
+                            device=kasadevice,
+                            update_interval=poll_interval,
+                            config_entry=cast(TPLinkConfigEntry, self.config_entry),
+                        )
+                    )
+                    self.data.append(
+                        TPLinkData(
+                            parent_coordinator=coordinator,
+                            camera_credentials=None,
+                            live_view=None,
+                        )
+                    )
 
-        if not self.data:
-            # first run.
-            for device_id, device in data.items():
-                kasadevice: Device = await self.cloud.get_device(device)
-                coordinator: TPLinkDataUpdateCoordinator = TPLinkDataUpdateCoordinator(
-                    hass=self.hass,
-                    device=kasadevice,
-                    update_interval=poll_interval,
-                    config_entry=cast(TPLinkConfigEntry, self.config_entry),
-                )
-                self.data[device_id] = TPLinkData(
-                    parent_coordinator=coordinator,
-                    camera_credentials=None,
-                    live_view=None,
-                )
-            return self.data
+    async def _async_get_device_list(self) -> list[DeviceDict]:
+        try:
+            return await self.cloud.get_device_list()
+        except AuthenticationError as ex:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders={"exc": str(ex)},
+            ) from ex
+        except KasaException as ex:
+            raise CloudConnectionError(
+                translation_domain=DOMAIN, translation_key="connection_error"
+            ) from ex
 
-        if list(data.keys() - self.data.keys()):
-            # new device
-            if not await self.hass.config_entries.async_reload(
-                self.config_entry.entry_id
-            ):
-                raise ConfigEntryError("Found a new device, please reload manually")
+    def _trigger_discover_flow(self, device: DeviceDict) -> None:
+        discovery_flow.async_create_flow(
+            self.hass,
+            DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                CONF_ALIAS: device.get(CONF_ALIAS, device["deviceName"]),
+                CONF_MAC: dr.format_mac(device["deviceMac"]),
+                CONF_DEVICE: device,
+                CONFIG_ENTRY: self.config_entry,
+            },
+        )
+
+    async def _async_update_data(self) -> list[TPLinkData]:
+        data: list[DeviceDict] = await self._async_get_device_list()
+
+        if len(data) != len(self.data):
+            # we have new devices?
+            for device in data:
+                formatted_mac: str = dr.format_mac(device["deviceMac"])
+                if formatted_mac not in self.config_entry.data.get(
+                    "devices", []
+                ) and not device_is_registered(self.hass, formatted_mac):
+                    self._trigger_discover_flow(device)
 
         return self.data
 
     async def async_shutdown(self) -> None:
         """Shutdown the coordinator."""
-        for data in self.data.values():
+        for data in self.data:
             await data.parent_coordinator.async_shutdown()
         await self.cloud.close()
         return await super().async_shutdown()

@@ -25,7 +25,7 @@ async def async_setup_entry(
         if hass.config_entries.async_loaded_entries(TPLINK_DOMAIN)
         else None
     )
-    for data in config_entry.runtime_data.data.values():
+    for data in config_entry.runtime_data.data:
         # if tplink is configured, check to make sure the device isn't already registered, otherwise we will get duplicates.
         device = (
             device_registry.async_get_device(

@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from kasa import AuthenticationError
-from pykasacloud.kasacloud import KasaCloud
+from pykasacloud.kasacloud import DeviceDict, KasaCloud
 import voluptuous as vol
 
+from homeassistant.components.tplink import create_async_tplink_clientsession
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_USER,
@@ -18,8 +19,15 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     DurationSelector,
     DurationSelectorConfig,
@@ -27,9 +35,11 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
     ACCOUNT_ID,
+    CONFIG_ENTRY,
     DEFAULT_DEVICE_INTERVAL,
     DEFAULT_DEVICE_LIST_INTERVAL,
     DEVICE_INTERVAL,
@@ -38,6 +48,7 @@ from .const import (
     MIN_DEVICE_INTERVAL,
     MIN_DEVICE_LIST_INTERVAL,
 )
+from .coordinator import KasaCloudConfigEntry, device_is_registered
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,6 +122,10 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     MINOR_VERSION = 1
 
+    _kasacloud_entry: KasaCloudConfigEntry
+    _discovered_device: DeviceDict
+    _discovered_id: str | None = None
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -131,6 +146,7 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             try:
                 cloud: KasaCloud = await KasaCloud.kasacloud(
+                    client_session=create_async_tplink_clientsession(self.hass),
                     username=user_input[CONF_USERNAME],
                     password=user_input[CONF_PASSWORD],
                 )
@@ -164,3 +180,62 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         return self.async_show_form(data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
+
+    async def async_step_integration_discovery(
+        self, discovery_info: DiscoveryInfoType
+    ) -> ConfigFlowResult:
+        """Handle discovery."""
+        self._discovered_device = discovery_info[CONF_DEVICE]
+        self._discovered_id = self._discovered_device["deviceId"]
+        await self.async_set_unique_id(self._discovered_id)
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
+            return self.async_abort(reason="already_in_progress")
+        self._kasacloud_entry = discovery_info[CONFIG_ENTRY]
+
+        if self._discovered_id in self._kasacloud_entry.data.get(
+            "devices", []
+        ) or device_is_registered(
+            self.hass, format_mac(self._discovered_device["deviceMac"])
+        ):
+            return self.async_abort(reason="already_configured")
+
+        self.context["title_placeholders"] = {
+            "name": self._discovered_device.get(
+                "alias", self._discovered_device["deviceName"]
+            ),
+            "model": self._discovered_device["deviceModel"],
+        }
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        if user_input is not None:
+            devices: list[str] = self._kasacloud_entry.data.get("devices", [])
+            if self._discovered_id:
+                devices.append(format_mac(self._discovered_device["deviceMac"]).upper())
+            return self.async_update_reload_and_abort(
+                self._kasacloud_entry,
+                data_updates={"devices": devices},
+                reason="device_added",
+            )
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            description_placeholders={
+                CONF_NAME: self._discovered_device.get(
+                    "alias", self._discovered_device["deviceName"]
+                ),
+                "model": self._discovered_device["deviceModel"],
+            },
+        )
+
+    def is_matching(self, other_flow: ConfigFlow) -> bool:
+        """Check for matching flow."""
+        other_flow_typed: TpLinkCloudConfigFlow = cast(
+            TpLinkCloudConfigFlow, other_flow
+        )
+        return (
+            self._discovered_device is not None
+            and self._discovered_id == other_flow_typed._discovered_id
+        )

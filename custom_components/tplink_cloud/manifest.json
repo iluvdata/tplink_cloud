@@ -7,11 +7,10 @@
   "documentation": "https://github.com/iluvdata/tplink_cloud",
   "homekit": {},
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze",
-  "requirements": ["pykasacloud==2025.9.1"],
+  "requirements": ["pykasacloud==2025.10.1"],
   "ssdp": [],
   "zeroconf": [],
-  "version": "2025.9.2",
-  "integration_type": "hub",
+  "version": "2025.10.1",
+  "integration_type": "service",
   "issue_tracker": "https://github.com/iluvdata/tplink_cloud/issues"
 }

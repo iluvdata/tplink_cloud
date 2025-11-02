@@ -5,6 +5,7 @@ from homeassistant.const import Platform
 ACCOUNT_ID = "account_id"
 DOMAIN = "tplink_cloud"
 TOKEN = "token"
+CONFIG_ENTRY = "config_entry"
 DEVICE_LIST_INTERVAL = "device_list_interval"
 DEFAULT_DEVICE_LIST_INTERVAL = 30  # minutes
 MIN_DEVICE_LIST_INTERVAL = 1  # minute
