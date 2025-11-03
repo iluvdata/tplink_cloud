@@ -10,7 +10,10 @@ from kasa import AuthenticationError
 from pykasacloud.kasacloud import DeviceDict, KasaCloud
 import voluptuous as vol
 
-from homeassistant.components.tplink import create_async_tplink_clientsession
+from homeassistant.components.tplink import (
+    DOMAIN as TPLINK_DOMAIN,
+    create_async_tplink_clientsession,
+)
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_USER,
@@ -27,7 +30,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import format_mac
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.selector import (
     DurationSelector,
     DurationSelectorConfig,
@@ -45,7 +48,6 @@ from .const import (
     DEVICE_INTERVAL,
     DEVICE_LIST_INTERVAL,
     DOMAIN,
-    KASA_DEVICE_ID,
     KASA_MAC,
     KASA_MODEL,
     KASA_NAME,
@@ -190,7 +192,7 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery."""
         self._discovered_device = discovery_info[CONF_DEVICE]
-        self._mac = format_mac(self._discovered_device[KASA_MAC])
+        self._mac = dr.format_mac(self._discovered_device[KASA_MAC])
         await self.async_set_unique_id(self._mac)
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
@@ -220,12 +222,16 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None:
-            devices: dict[str, str] = self._kasacloud_entry.data.get("devices", {})
-            devices[self._mac] = self._discovered_device[KASA_DEVICE_ID]
+            # create a device placeholder
+            dr.async_get(self.hass).async_get_or_create(
+                config_entry_id=self._kasacloud_entry.entry_id,
+                identifiers={(TPLINK_DOMAIN, self._mac)},
+                name=self._discovered_device.get(
+                    "alias", self._discovered_device[KASA_NAME]
+                ),
+            )
             return self.async_update_reload_and_abort(
-                self._kasacloud_entry,
-                data_updates={"devices": devices},
-                reason="device_added",
+                self._kasacloud_entry, reason="device_added"
             )
         return self.async_show_form(
             step_id="discovery_confirm",
