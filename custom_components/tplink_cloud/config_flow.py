@@ -45,10 +45,14 @@ from .const import (
     DEVICE_INTERVAL,
     DEVICE_LIST_INTERVAL,
     DOMAIN,
+    KASA_DEVICE_ID,
+    KASA_MAC,
+    KASA_MODEL,
+    KASA_NAME,
     MIN_DEVICE_INTERVAL,
     MIN_DEVICE_LIST_INTERVAL,
 )
-from .coordinator import KasaCloudConfigEntry, device_is_registered
+from .coordinator import KasaCloudConfigEntry, async_get_device_entry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +128,7 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _kasacloud_entry: KasaCloudConfigEntry
     _discovered_device: DeviceDict
-    _discovered_id: str | None = None
+    _mac: str
 
     @staticmethod
     @callback
@@ -186,24 +190,28 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery."""
         self._discovered_device = discovery_info[CONF_DEVICE]
-        self._discovered_id = self._discovered_device["deviceId"]
-        await self.async_set_unique_id(self._discovered_id)
+        self._mac = format_mac(self._discovered_device[KASA_MAC])
+        await self.async_set_unique_id(self._mac)
         if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
         self._kasacloud_entry = discovery_info[CONFIG_ENTRY]
 
-        if self._discovered_id in self._kasacloud_entry.data.get(
-            "devices", []
-        ) or device_is_registered(
-            self.hass, format_mac(self._discovered_device["deviceMac"])
-        ):
+        if async_get_device_entry(self.hass, self._discovered_device) is not None:
             return self.async_abort(reason="already_configured")
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if (
+                entry.unique_id == self._mac
+                and entry.source == "ignore"
+                and entry.discovery_keys
+            ):
+                # don't proceed to discovery as the device was ignored.
+                return self.async_abort(reason="ignored")
 
         self.context["title_placeholders"] = {
             "name": self._discovered_device.get(
-                "alias", self._discovered_device["deviceName"]
+                "alias", self._discovered_device[KASA_NAME]
             ),
-            "model": self._discovered_device["deviceModel"],
+            "model": self._discovered_device[KASA_MODEL],
         }
         return await self.async_step_discovery_confirm()
 
@@ -212,9 +220,8 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None:
-            devices: list[str] = self._kasacloud_entry.data.get("devices", [])
-            if self._discovered_id:
-                devices.append(format_mac(self._discovered_device["deviceMac"]).upper())
+            devices: dict[str, str] = self._kasacloud_entry.data.get("devices", {})
+            devices[self._mac] = self._discovered_device[KASA_DEVICE_ID]
             return self.async_update_reload_and_abort(
                 self._kasacloud_entry,
                 data_updates={"devices": devices},
@@ -224,9 +231,9 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             description_placeholders={
                 CONF_NAME: self._discovered_device.get(
-                    "alias", self._discovered_device["deviceName"]
+                    "alias", self._discovered_device[KASA_NAME]
                 ),
-                "model": self._discovered_device["deviceModel"],
+                "model": self._discovered_device[KASA_MODEL],
             },
         )
 
@@ -236,6 +243,5 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             TpLinkCloudConfigFlow, other_flow
         )
         return (
-            self._discovered_device is not None
-            and self._discovered_id == other_flow_typed._discovered_id
+            self._discovered_device is not None and self._mac == other_flow_typed._mac
         )

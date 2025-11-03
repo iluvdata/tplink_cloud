@@ -11,7 +11,7 @@ from pykasacloud import KasaCloud, Token
 from homeassistant.components.tplink import create_async_tplink_clientsession
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.device_registry import DeviceEntry
+import homeassistant.helpers.device_registry as dr
 
 from .const import DEVICE_LIST_INTERVAL, PLATFORMS, TOKEN
 from .coordinator import KasaCloudConfigEntry, KasaCloudCoordinator
@@ -61,13 +61,11 @@ async def update_listener(hass: HomeAssistant, entry: KasaCloudConfigEntry) -> N
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: KasaCloudConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant,
+    config_entry: KasaCloudConfigEntry,
+    device_entry: dr.DeviceEntry,
 ) -> bool:
     """Delete device if selected from UI."""
-    mac: str = list(device_entry.identifiers)[0][1]
-    devices: list[str] = config_entry.data.get("devices", [])
-    devices.remove(mac.upper())
-    hass.config_entries.async_update_entry(config_entry, data={"devices": devices})
     return True
 
 
