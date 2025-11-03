@@ -249,5 +249,7 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             TpLinkCloudConfigFlow, other_flow
         )
         return (
-            self._discovered_device is not None and self._mac == other_flow_typed._mac
+            hasattr(self, "_mac")
+            and hasattr(other_flow_typed, "_mac")
+            and self._mac == other_flow_typed._mac
         )
