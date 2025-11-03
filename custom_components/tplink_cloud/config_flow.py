@@ -225,7 +225,10 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             # create a device placeholder
             dr.async_get(self.hass).async_get_or_create(
                 config_entry_id=self._kasacloud_entry.entry_id,
-                identifiers={(TPLINK_DOMAIN, self._mac)},
+                identifiers={
+                    (TPLINK_DOMAIN, self._mac),
+                    (TPLINK_DOMAIN, self._mac.upper()),
+                },
                 name=self._discovered_device.get(
                     "alias", self._discovered_device[KASA_NAME]
                 ),
