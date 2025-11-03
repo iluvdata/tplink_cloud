@@ -330,7 +330,7 @@
       "message": "Unable to communicate TPLink/Kasa API. See logs"
     },
     "auth_error": {
-      "message": "Authentication Error: { exc }"
+      "message": "Authentication Error: {exc}"
     },
     "device_authentication": {
       "message": "Device authentication error {func}: {exc}"
