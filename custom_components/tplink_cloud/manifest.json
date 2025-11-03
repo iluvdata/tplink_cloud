@@ -1,6 +1,7 @@
 {
   "domain": "tplink_cloud",
   "name": "TPLink Cloud",
+  "after_dependencies": ["tplink"],
   "codeowners": ["@iluvdata"],
   "config_flow": true,
   "dependencies": [],
