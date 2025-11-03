@@ -42,8 +42,8 @@
           "device_list_interval": "Poll For New Devices Interval"
         },
         "data_description": {
-          "device_interval": "Minimun { device_interval }s. Recommend { default_interval }s to avoid API restrictions",
-          "device_list_interval": "Minimun { device_list_interval }m. Recommend { default_list_interval }m to avoid API restrictions"
+          "device_interval": "Minimun {device_interval}s. Recommend {default_interval}s to avoid API restrictions",
+          "device_list_interval": "Minimun {device_list_interval}m. Recommend {default_list_interval}m to avoid API restrictions"
         }
       }
     },
