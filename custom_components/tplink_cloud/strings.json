@@ -1,7 +1,9 @@
 {
   "config": {
     "flow_title": "{name} {model}",
-    "entry_type": "Kasa/Tapo Account",
+    "initiate_flow": {
+      "user": "Add TPLink Cloud Account"
+    },
     "step": {
       "user": {
         "data": {
