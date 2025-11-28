@@ -1,9 +1,6 @@
 {
   "config": {
     "flow_title": "{name} {model}",
-    "initiate_flow": {
-      "user": "Add TPLink Cloud Account"
-    },
     "abort": {
       "already_configured": "Account is already configured",
       "device_added": "Device has been added",

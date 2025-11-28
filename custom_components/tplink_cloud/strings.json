@@ -1,9 +1,7 @@
 {
   "config": {
     "flow_title": "{name} {model}",
-    "initiate_flow": {
-      "user": "Add TPLink Cloud Account"
-    },
+
     "step": {
       "user": {
         "data": {
