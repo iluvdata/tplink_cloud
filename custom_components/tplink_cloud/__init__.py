@@ -1,7 +1,5 @@
 """The TPLink Cloud integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -13,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.device_registry as dr
 
-from .const import DEVICE_LIST_INTERVAL, PLATFORMS, TOKEN
+from .const import PLATFORMS, TOKEN
 from .coordinator import KasaCloudConfigEntry, KasaCloudCoordinator
 from .exceptions import TokenUpdateError
 
@@ -23,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: KasaCloudConfigEntry) -> bool:
     """Set up TPLink Cloud from a config entry."""
 
-    async def update_token(token: Token) -> None:
+    def update_token(token: Token) -> None:
         data = entry.data | {TOKEN: token}
         result = hass.config_entries.async_update_entry(
             entry=entry, data=data, unique_id=entry.unique_id
@@ -48,16 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: KasaCloudConfigEntry) ->
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     return True
-
-
-async def update_listener(hass: HomeAssistant, entry: KasaCloudConfigEntry) -> None:
-    """Config Entry Update Listener."""
-    coordinator: KasaCloudCoordinator = entry.runtime_data
-    if entry.options and DEVICE_LIST_INTERVAL in entry.options:
-        coordinator.new_interval(timedelta(**entry.options[DEVICE_LIST_INTERVAL]))
 
 
 async def async_remove_config_entry_device(

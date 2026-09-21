@@ -14,7 +14,11 @@ from homeassistant.components.tplink import (
     TPLinkData,
     TPLinkDataUpdateCoordinator,
 )
-from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    SOURCE_INTEGRATION_DISCOVERY,
+    ConfigEntry,
+)
 from homeassistant.const import CONF_DEVICE, CONF_MAC
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -53,17 +57,32 @@ class TPLinkConfigEntrySkelaton:
         """Placeholder method that does nothing."""
 
 
-def async_get_device_entry(
-    hass: HomeAssistant, device_dict: DeviceDict
-) -> dr.DeviceEntry | None:
+@callback
+def async_is_active_tplink_device(hass: HomeAssistant, device_dict: DeviceDict) -> bool:
     """Check if the device is already registered in another config entry."""
-    # first check the device registries:
-    dev_reg: dr.DeviceRegistry = dr.async_get(hass)
-    formatted_mac: str = dr.format_mac(device_dict[KASA_MAC])
-    if not (device := dev_reg.async_get_device({(TPLINK_DOMAIN, formatted_mac)})):
-        # the case on mac addresses is not consistent in the base tplink component
-        device = dev_reg.async_get_device({(TPLINK_DOMAIN, formatted_mac.upper())})
-    return device
+
+    formatted_mac = dr.format_mac(device_dict[KASA_MAC])
+    if config_entry := hass.config_entries.async_entry_for_domain_unique_id(
+        TPLINK_DOMAIN, formatted_mac
+    ):
+        return config_entry.source != SOURCE_IGNORE and config_entry.disabled_by is None
+    return False
+
+
+@callback
+def async_is_active_cloud_device(
+    hass: HomeAssistant, entry_id: str, device_dict: DeviceDict
+) -> bool:
+    """Check if the device is a cloud device."""
+
+    formatted_mac = dr.format_mac(device_dict[KASA_MAC])
+    dev_reg = dr.async_get(hass)
+    return (
+        dev_reg.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, formatted_mac), entry_id
+        )
+        is not None
+    )
 
 
 class KasaCloudCoordinator(DataUpdateCoordinator[list[TPLinkData]]):
@@ -101,29 +120,28 @@ class KasaCloudCoordinator(DataUpdateCoordinator[list[TPLinkData]]):
     async def _async_setup(self) -> None:
         data: list[DeviceDict] = await self._async_get_device_list()
         poll_interval: timedelta = timedelta(
-            **self.config_entry.data.get(
+            **self.config_entry.options.get(
                 DEVICE_INTERVAL, {"seconds": DEFAULT_DEVICE_INTERVAL}
             )
         )
         for device in data:
-            if device_entry := async_get_device_entry(self.hass, device):
-                if self.config_entry.entry_id in device_entry.config_entries:
-                    kasadevice: Device = await self.cloud.get_device(device)
-                    coordinator: TPLinkDataUpdateCoordinator = (
-                        TPLinkDataUpdateCoordinator(
-                            hass=self.hass,
-                            device=kasadevice,
-                            update_interval=poll_interval,
-                            config_entry=cast(TPLinkConfigEntry, self.config_entry),
-                        )
+            if async_is_active_cloud_device(
+                self.hass, self.config_entry.entry_id, device
+            ):
+                kasadevice: Device = await self.cloud.get_device(device)
+                coordinator: TPLinkDataUpdateCoordinator = TPLinkDataUpdateCoordinator(
+                    hass=self.hass,
+                    device=kasadevice,
+                    update_interval=poll_interval,
+                    config_entry=cast(TPLinkConfigEntry, self.config_entry),
+                )
+                self.data.append(
+                    TPLinkData(
+                        parent_coordinator=coordinator,
+                        camera_credentials=None,
+                        live_view=None,
                     )
-                    self.data.append(
-                        TPLinkData(
-                            parent_coordinator=coordinator,
-                            camera_credentials=None,
-                            live_view=None,
-                        )
-                    )
+                )
                 continue
             self._trigger_discover_flow(device)
 
@@ -142,15 +160,15 @@ class KasaCloudCoordinator(DataUpdateCoordinator[list[TPLinkData]]):
             ) from ex
 
     def _trigger_discover_flow(self, device: DeviceDict) -> None:
-        # check if the device hasn't been ignored.
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if (
-                entry.unique_id == dr.format_mac(device[KASA_MAC])
-                and entry.source == "ignore"
-                and entry.discovery_keys
-            ):
-                # don't proceed to discovery as the device was ignored.
+        # check if the device hasn't been ignored, disabled, or otherwise configured
+        mac = dr.format_mac(device[KASA_MAC])
+        if config_entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+            self.config_entry, mac
+        ):
+            if config_entry.source == SOURCE_IGNORE:
                 return
+        if async_is_active_tplink_device(self.hass, device):
+            return
 
         discovery_flow.async_create_flow(
             self.hass,
@@ -170,7 +188,9 @@ class KasaCloudCoordinator(DataUpdateCoordinator[list[TPLinkData]]):
         if len(data) != len(self.data):
             # we have new devices?
             for device in data:
-                if not async_get_device_entry(self.hass, device):
+                if not async_is_active_cloud_device(
+                    self.hass, self.config_entry.entry_id, device
+                ):
                     self._trigger_discover_flow(device)
 
         return self.data

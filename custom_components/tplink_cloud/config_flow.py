@@ -1,26 +1,25 @@
 """Config flow for the TPLink Cloud integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any, cast
 
 from kasa import AuthenticationError
+import probatio as vol
 from pykasacloud.kasacloud import DeviceDict, KasaCloud
-import voluptuous as vol
 
 from homeassistant.components.tplink import (
     DOMAIN as TPLINK_DOMAIN,
     create_async_tplink_clientsession,
 )
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_DEVICE,
@@ -54,7 +53,11 @@ from .const import (
     MIN_DEVICE_INTERVAL,
     MIN_DEVICE_LIST_INTERVAL,
 )
-from .coordinator import KasaCloudConfigEntry, async_get_device_entry
+from .coordinator import (
+    KasaCloudConfigEntry,
+    async_is_active_cloud_device,
+    async_is_active_tplink_device,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +88,7 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Options flow for integration."""
 
     async def async_step_init(
@@ -198,17 +201,18 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_in_progress")
         self._kasacloud_entry = discovery_info[CONFIG_ENTRY]
 
-        if async_get_device_entry(self.hass, self._discovered_device) is not None:
+        if async_is_active_cloud_device(
+            self.hass, self._kasacloud_entry, self._discovered_device
+        ) or async_is_active_tplink_device(self.hass, self._discovered_device):
             return self.async_abort(reason="already_configured")
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if (
                 entry.unique_id == self._mac
-                and entry.source == "ignore"
+                and entry.source == SOURCE_IGNORE
                 and entry.discovery_keys
             ):
                 # don't proceed to discovery as the device was ignored.
                 return self.async_abort(reason="ignored")
-
         self.context["title_placeholders"] = {
             "name": self._discovered_device.get(
                 "alias", self._discovered_device[KASA_NAME]
@@ -225,13 +229,12 @@ class TpLinkCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             # create a device placeholder
             dr.async_get(self.hass).async_get_or_create(
                 config_entry_id=self._kasacloud_entry.entry_id,
-                identifiers={
-                    (TPLINK_DOMAIN, self._mac),
-                    (TPLINK_DOMAIN, self._mac.upper()),
-                },
+                identifiers={(DOMAIN, self._discovered_device["deviceId"])},
+                connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
                 name=self._discovered_device.get(
                     "alias", self._discovered_device[KASA_NAME]
                 ),
+                serial_number=self._discovered_device["hwId"],
             )
             return self.async_update_reload_and_abort(
                 self._kasacloud_entry, reason="device_added"
