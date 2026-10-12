@@ -4,14 +4,10 @@
   "after_dependencies": ["tplink"],
   "codeowners": ["@iluvdata"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://github.com/iluvdata/tplink_cloud",
-  "homekit": {},
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/iluvdata/tplink_cloud/issues",
   "requirements": ["pykasacloud==2025.10.1"],
-  "ssdp": [],
-  "version": "2025.10.1",
-  "zeroconf": []
+  "version": "2026.10.1"
 }
